@@ -141,101 +141,22 @@ class Reservation_VC: UIViewController, UITableViewDelegate, UITableViewDataSour
         
     }
     
+    
+    func numberOfSections(in tableView: UITableView) -> Int {
+    return 2
+}
 
-    
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
-        
-        guard let scrollView = scrollView else {
-                        return
-                    }
-                    let pageIndex = 3
-                    let rect = CGRect(x: CGFloat(pageIndex) * scrollView.frame.width, y: 0, width: scrollView.frame.width, height: scrollView.frame.height)
-                    
-                    scrollView.scrollRectToVisible(rect, animated: true)
-                }
-       
-    
-    func setupScrollView() {
-        scrollView = UIScrollView(frame: CGRect(x: 0, y: 80, width: view.frame.width, height: view.frame.width / 4 * 3))
-        
-        guard let scrollView = scrollView else {
-            return
-        }
-        
-        let pageIndex = 3
-        let rect = CGRect(x: CGFloat(pageIndex) * scrollView.frame.width, y: 0, width: scrollView.frame.height, height: scrollView.frame.height)
-        
-        scrollView.scrollRectToVisible(rect, animated: true)
-        scrollView.contentSize = CGSize(width: scrollView.frame.width, height: scrollView.frame.height)
-        scrollView.isUserInteractionEnabled = false
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+    if section == 0 {
+        // 第一个Section用于显示预订，返回reservationArray的数量
+        return reservationArray.count
+    } else if section == 1 {
+        // 第二个Section用于标题，返回1表示只有一个标题行
+        return 1
     }
+        return 0
+}
     
-    
-     func numberOfSections(in tableView: UITableView) -> Int {
-        // 返回总共的Section数量，包括一个额外的Section用于标题
-        return 2
-    }
-
-     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        if section == 0 {
-            // 第一个Section用于显示预订，返回reservationArray的数量
-            return reservationArray.count
-        } else if section == 1 {
-            // 第二个Section用于标题，返回1表示只有一个标题行
-            return 1
-        }
-         return 0
-    }
-    
-    @objc func phoneNumberTextFieldDidChange(_ textField: UITextField) {
-        if let text = textField.text {
-            if text.count == 10 {
-            if text.hasPrefix("09") {
-                print("**phomeNumder is true")
-            } else {
-                showInvalidPhoneNumberAlert()
-                print("**phoneNumder is false")
-            }
-        } else if text.count > 10 {
-                print("**number too long")
-                showNumberTooLongAlert()
-            }
-        }
-    }
-    
-    func showAlertWithTitle(_ title: String, message: String) {
-        let alert = UIAlertController(
-            title: title,
-            message: message,
-            preferredStyle: .alert
-            )
-        
-        let okAction = UIAlertAction(
-            title: "Enter",
-            style: .default
-//            handler: nil
-        )
-        
-        alert.addAction(okAction)
-        present(alert, animated: true, completion: nil)
-    }
-    
-    func showInvalidCharacterAlert() {
-        showAlertWithTitle("Invalid Input", message: "只能輸入中文和英文")
-    }
-    
-    func showInvalidPhoneNumberAlert() {
-        showAlertWithTitle("Tip", message: "需輸入09開頭的手機號碼")
-
-
-    }
-    
-        func showNumberTooLongAlert() {
-            showAlertWithTitle("Tip", message: "phoneNumber too long")
-
-        }
-        
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         if indexPath.section == 0 {
             let cell = tableView.dequeueReusableCell(withIdentifier: "customTableViewCell", for: indexPath) as! CustomTableViewCell
@@ -464,68 +385,19 @@ class Reservation_VC: UIViewController, UITableViewDelegate, UITableViewDataSour
         
         return UITableViewCell()
     }
-
-    private func textField(_ textField: UITextField, shouldCangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
-        
-        let allowedCharacterSet = CharacterSet(charactersIn: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789你好您好您好嗨")
-        
-        for scalar in string.unicodeScalars {
-            if !allowedCharacterSet.contains(scalar) {
-                showInvalidPhoneNumberAlert()
-                return false
-            }
-        }
-        return true
+    
+    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+        return tableView.rowHeight
     }
     
-    
-    func pickerView(_ pickerView: UIPickerView, didSelectRow row: Int, inComponent component: Int) {
-        
-        let selectedRow = startTimePickerView.selectedRow(inComponent: 0)
-        let selectdTime = customUIElements[2].pickerViewData?[selectedRow]
-
-        let dateFormtter = DateFormatter()
-        dateFormtter.dateFormat = "HH:mm"
-
-        if let selectedDate = dateFormtter.date(from: selectdTime!) {
-            if let endTime = Calendar.current.date(byAdding: .minute, value: 90, to: selectedDate) {
-                reservationArray[6] = dateFormtter.string(from: endTime)
-
-                endTimeLabel.text = reservationArray[6]
-            }
-        }
-        
+    func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
+    if section == 0 {
+        // 返回标题Section的标题为"預約"
+        return "預約"
+    } else {
+        return "繳費"
     }
-    
-    func pickerView(_ pickerView: UIPickerView, viewForRow row: Int, forComponent component: Int, reusing view: UIView?) -> UIView {
-        let pickerLabel = UILabel()
-        pickerLabel.textAlignment = .center
-        pickerLabel.text = customUIElements[pickerView.tag - 1].pickerViewData?[row]
-        pickerLabel.font = UIFont.systemFont(ofSize: 20)
-        return pickerLabel
-    }
-    
-        
-    @objc func confirmButtonTapped() {
-        if let indexPath = tableView.indexPathForSelectedRow {
-            let cell = tableView.cellForRow(at: indexPath)
-            if let paymentTextField = cell?.subviews.first(where: { $0 is UITextField }) as? UITextField {
-                if let amount = paymentTextField.text {
-                    print("**confirmButtonTapped 繳費金額:\(amount)")
-                }
-            }
-        }
-    }
-    
-
-     func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
-        if section == 0 {
-            // 返回标题Section的标题为"預約"
-            return "預約"
-        } else {
-            return "繳費"
-        }
-    }
+}
 
     
     func numberOfComponents(in UIPickerView: UIPickerView) -> Int {
@@ -565,6 +437,122 @@ class Reservation_VC: UIViewController, UITableViewDelegate, UITableViewDataSour
         return nil
     }
     
+    func pickerView(_ pickerView: UIPickerView, didSelectRow row: Int, inComponent component: Int) {
+        
+        let selectedRow = startTimePickerView.selectedRow(inComponent: 0)
+        let selectdTime = customUIElements[2].pickerViewData?[selectedRow]
+
+        let dateFormtter = DateFormatter()
+        dateFormtter.dateFormat = "HH:mm"
+
+        if let selectedDate = dateFormtter.date(from: selectdTime!) {
+            if let endTime = Calendar.current.date(byAdding: .minute, value: 90, to: selectedDate) {
+                reservationArray[6] = dateFormtter.string(from: endTime)
+
+                endTimeLabel.text = reservationArray[6]
+            }
+        }
+        
+    }
+    
+    func pickerView(_ pickerView: UIPickerView, viewForRow row: Int, forComponent component: Int, reusing view: UIView?) -> UIView {
+        let pickerLabel = UILabel()
+        pickerLabel.textAlignment = .center
+        pickerLabel.text = customUIElements[pickerView.tag - 1].pickerViewData?[row]
+        pickerLabel.font = UIFont.systemFont(ofSize: 20)
+        return pickerLabel
+    }
+    
+       
+    func setupScrollView() {
+        scrollView = UIScrollView(frame: CGRect(x: 0, y: 80, width: view.frame.width, height: view.frame.width / 4 * 3))
+        
+        guard let scrollView = scrollView else {
+            return
+        }
+        
+        let pageIndex = 3
+        let rect = CGRect(x: CGFloat(pageIndex) * scrollView.frame.width, y: 0, width: scrollView.frame.height, height: scrollView.frame.height)
+        
+        scrollView.scrollRectToVisible(rect, animated: true)
+        scrollView.contentSize = CGSize(width: scrollView.frame.width, height: scrollView.frame.height)
+        scrollView.isUserInteractionEnabled = false
+    }
+    
+    
+    func showAlertWithTitle(_ title: String, message: String) {
+        let alert = UIAlertController(
+            title: title,
+            message: message,
+            preferredStyle: .alert
+            )
+        
+        let okAction = UIAlertAction(
+            title: "Enter",
+            style: .default
+//            handler: nil
+        )
+        
+        alert.addAction(okAction)
+        present(alert, animated: true, completion: nil)
+    }
+    
+    func showInvalidCharacterAlert() {
+        showAlertWithTitle("Invalid Input", message: "只能輸入中文和英文")
+    }
+    
+    func showInvalidPhoneNumberAlert() {
+        showAlertWithTitle("Tip", message: "需輸入09開頭的手機號碼")
+
+
+    }
+    
+    func showNumberTooLongAlert() {
+        showAlertWithTitle("Tip", message: "phoneNumber too long")
+
+    }
+        
+    
+    private func textField(_ textField: UITextField, shouldCangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
+        
+        let allowedCharacterSet = CharacterSet(charactersIn: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789你好您好您好嗨")
+        
+        for scalar in string.unicodeScalars {
+            if !allowedCharacterSet.contains(scalar) {
+                showInvalidPhoneNumberAlert()
+                return false
+            }
+        }
+        return true
+    }
+    
+    @objc func phoneNumberTextFieldDidChange(_ textField: UITextField) {
+        if let text = textField.text {
+            if text.count == 10 {
+            if text.hasPrefix("09") {
+                print("**phomeNumder is true")
+            } else {
+                showInvalidPhoneNumberAlert()
+                print("**phoneNumder is false")
+            }
+        } else if text.count > 10 {
+                print("**number too long")
+                showNumberTooLongAlert()
+            }
+        }
+    }
+   
+    @objc func confirmButtonTapped() {
+        if let indexPath = tableView.indexPathForSelectedRow {
+            let cell = tableView.cellForRow(at: indexPath)
+            if let paymentTextField = cell?.subviews.first(where: { $0 is UITextField }) as? UITextField {
+                if let amount = paymentTextField.text {
+                    print("**confirmButtonTapped 繳費金額:\(amount)")
+                }
+            }
+        }
+    }
+    
     @objc func hendleTap() {
         view.endEditing(true)
     }
@@ -574,8 +562,6 @@ class Reservation_VC: UIViewController, UITableViewDelegate, UITableViewDataSour
         return true
     }
     
-    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        return tableView.rowHeight
-    }
+    
     
 }
