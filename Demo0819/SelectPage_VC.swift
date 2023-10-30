@@ -29,24 +29,27 @@ class SelectPage_VC: UIViewController, UIScrollViewDelegate, UIPageViewControlle
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        let emptyTitleView = UIView(frame: CGRect(x: 0, y: 0, width: 200, height: 44))
+        self.navigationItem.titleView = emptyTitleView
+        
+        
+        
+        let titleLabel = UILabel()
+        titleLabel.text = "神秘的海盜寶藏"
+        titleLabel.textColor = UIColor.black
+        titleLabel.font = UIFont.systemFont(ofSize: 16)
+        titleLabel.sizeToFit()
+        titleLabel.textAlignment = .center
+        self.navigationItem.titleView = titleLabel
+        
 
+        
         textField = UITextField()
         
         viewModel = Select﻿PageViewModel(introductions: escapeRoomIntroductions)
         
-        if let titleLabel = self.navigationItem.titleView as? UILabel {
-            var frame = titleLabel.frame
-            frame.origin.y = verticalAdjustment
-            titleLabel.frame = frame
-            
-            print("**titleLabel.frame == \(titleLabel.frame)")
-        }
-        
-        if label.text == nil {
-            if let firstTitle = escapeRoomIntroductions.first?["title"] as? String {
-                label.text = firstTitle
-            }
-        }
+
         
         // 創建左右翻頁的 UIScrollView
         horizontalScrollView = UIScrollView(frame: CGRect(x: 0, y: 100, width: view.frame.width, height: 200))
@@ -64,30 +67,33 @@ class SelectPage_VC: UIViewController, UIScrollViewDelegate, UIPageViewControlle
             horizontalScrollView.addSubview(imageView)
             
             // 調整 Z 軸位置，使圖片位於 verticalScrollView 上方
-            imageView.layer.zPosition = 1.0
+//            imageView.layer.zPosition = 1.0
         }
         
         // 增加水平平移手勢到 horizontalScrollView
         let horizontalPanGesture = UIPanGestureRecognizer(target: self, action: #selector(handleHorizontalPan(_:)))
         horizontalScrollView.addGestureRecognizer(horizontalPanGesture)
 
+        descriptionText()
+        
         //左下角“＋”按鈕
         let addButton = UIButton(type: .custom)
         addButton.translatesAutoresizingMaskIntoConstraints = false
         addButton.backgroundColor = UIColor.black
-        addButton.layer.cornerRadius = 50
+        addButton.layer.cornerRadius = 40
         addButton.setTitle("+", for: .normal)
         addButton.titleLabel?.font = UIFont.systemFont(ofSize: 40)
         addButton.setTitleColor(UIColor.white, for: .normal)
         addButton.addTarget(self, action: #selector(addButtonTapped), for: .touchUpInside)
         view.addSubview(addButton)
+        view.sendSubviewToBack(horizontalScrollView)
         
         // 設置 auto layout 約束
         NSLayoutConstraint.activate([
-            addButton.widthAnchor.constraint(equalToConstant: 100),
-            addButton.heightAnchor.constraint(equalToConstant: 100),
-            addButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
-            addButton.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -20)
+            addButton.widthAnchor.constraint(equalToConstant: 80),
+            addButton.heightAnchor.constraint(equalToConstant: 80),
+            addButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -30),
+            addButton.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -30)
         ])
         
         guard let horizontalScrollView = horizontalScrollView else {
@@ -112,28 +118,60 @@ class SelectPage_VC: UIViewController, UIScrollViewDelegate, UIPageViewControlle
             pageControl.bottomAnchor.constraint(equalTo: horizontalScrollView.topAnchor, constant:  190) // 距離水平滾動視圖的底部距離
 
         ])
+        
+        for introduction in escapeRoomIntroductions {
+            if let description = introduction["description"] as? String {
+                
+                print("**description == \(description)")
+            }
+        }
 
-        descriptionText()
+        
         
         
     }
     
+    func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        if scrollView == horizontalScrollView {
+            let pageIndex = Int(scrollView.contentOffset.x / scrollView.frame.size.width)
+            viewModel!.currentIndex = pageIndex
+            pageControl.currentPage = pageIndex
+            
+            if let titleText = escapeRoomIntroductions[pageIndex]["title"] as? String {
+                if let titleLabel = self.navigationItem.titleView as? UILabel {
+                    titleLabel.text = titleText
+                }
+                
+            }
+            if let description = escapeRoomIntroductions[pageIndex]["description"] as? String {
+                if let descriptionTextView = view.subviews.first(where: { $0 is UITextView}) as? UITextView {
+                    descriptionTextView.text =  description
+                }
+            }
+            
+        }
+    }
+    
     func descriptionText() {
         let descriptionTextView = UITextView()
-        descriptionTextView.text = "文字內容"
+//        descriptionTextView.text = "文字內容"
         descriptionTextView.isEditable = false
         descriptionTextView.textAlignment = .left
         descriptionTextView.textColor = .black
-        descriptionTextView.backgroundColor = .blue
+//        descriptionTextView.backgroundColor = .blue
         descriptionTextView.font = UIFont.systemFont(ofSize: 16)
-        descriptionTextView.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(descriptionTextView)
         
+        view.addSubview(descriptionTextView)
+        descriptionTextView.text = escapeRoomIntroductions[0]["description"]
+        
+        descriptionTextView.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
             descriptionTextView.topAnchor.constraint(equalTo: horizontalScrollView.bottomAnchor, constant: 10),
             descriptionTextView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            descriptionTextView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20)
+            descriptionTextView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            descriptionTextView.bottomAnchor.constraint(equalTo: view.bottomAnchor,constant: -20)
         ])
+        print("**descriptionTextView.text == \(descriptionTextView.text!)")
     }
     
     func viewControllerAtIndex(_ index: Int) -> ContentViewController? {
@@ -147,6 +185,7 @@ class SelectPage_VC: UIViewController, UIScrollViewDelegate, UIPageViewControlle
         }
         return nil
     }
+    
     func pageViewController(_ pageViewController: UIPageViewController, viewControllerBefore viewController: UIViewController) -> UIViewController? {
         if let contentVC = viewController as? ContentViewController {
             if let index = contentVC.index as? Int, index > 0 {
@@ -197,4 +236,5 @@ class SelectPage_VC: UIViewController, UIScrollViewDelegate, UIPageViewControlle
 
     
 }
+
 

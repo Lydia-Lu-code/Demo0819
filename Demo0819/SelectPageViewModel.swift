@@ -6,3 +6,17 @@
 //
 
 import Foundation
+
+class Select﻿PageViewModel{
+    var currentIndex: Int = 0
+    var escapeRoomIntrodutions: [[String: String]] = []
+    
+    init(introductions: [[String:String]]) {
+        escapeRoomIntrodutions = introductions
+    }
+    
+    func currentIntrodution() -> [String: String] {
+        return escapeRoomIntrodutions[currentIndex]
+    }
+
+}

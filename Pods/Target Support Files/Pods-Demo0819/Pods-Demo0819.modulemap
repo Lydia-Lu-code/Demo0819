@@ -1,0 +1,6 @@
+framework module Pods_Demo0819 {
+  umbrella header "Pods-Demo0819-umbrella.h"
+
+  export *
+  module * { export * }
+}
